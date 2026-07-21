@@ -18,5 +18,6 @@
 #define VOXEL_SKIP_UNLIT // Skip ray tracing on pixels with zero vanilla block light (big speedup, no visual cost)
 #define VOXEL_LIGHT_THINNING // In dense emitter fields (lava lakes) register every other emitter; the normalized lighting model keeps brightness identical, shadows get marginally coarser
 #define VOXEL_DEBUG 0 // [0 1] Debug: paint the raw traced factor (color x shadows) instead of lighting. For diagnosing, best viewed in caves/Nether.
+#define NETHER_LAVA_GLOW 0.4 // [0.15 0.2 0.3 0.4 0.5 0.6 0.8 1.0] Emissive brightness of lava surfaces in the Nether (tames the huge bloom glow over lava lakes)
 
 #endif

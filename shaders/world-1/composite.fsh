@@ -187,7 +187,10 @@ void main(){
 		finalComposite *= mix(vec3(1.0), NetherFogColor().rgb, gbuffer.material.metalness * 0.7);
 		finalComposite *= (1.0 - gbuffer.material.metalness * 0.75);
 		
-		finalComposite += TextureLighting(gbuffer.albedo, gbuffer.lightmapL.r, gbuffer.material.emissiveness, materialMaskSoild);
+		vec3 emissiveLight = TextureLighting(gbuffer.albedo, gbuffer.lightmapL.r, gbuffer.material.emissiveness, materialMaskSoild);
+		// tame the enormous lava glow in the Nether (bloom feeds on these pixels)
+		emissiveLight *= mix(1.0, NETHER_LAVA_GLOW, saturate(materialMaskSoild.lava));
+		finalComposite += emissiveLight;
 
 		finalComposite *= gbuffer.albedo;
 
