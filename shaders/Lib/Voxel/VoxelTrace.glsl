@@ -145,11 +145,16 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 		ndotl = dist < 0.87 ? 1.0 : saturate(ndotl * 0.9 + 0.1);
 		if (ndotl <= 0.0) continue;
 
-		float window = saturate(1.0 - dist / range);
-		float atten = window * window * 3.0 / (dist * dist + 0.5);
+		// inverse-square falloff with a smooth Frostbite-style range window:
+		// nearly pure 1/d^2 through most of the range, bending gently to zero at
+		// the very end (no visible circle where the light cuts off)
+		float dr = dist / range;
+		float window = saturate(1.0 - dr * dr * dr * dr);
+		window *= window;
+		float atten = window * 3.0 / (dist * dist + 0.5);
 
 		float weight = atten * ndotl;
-		if (weight < 0.002) continue;
+		if (weight < 0.0002) continue;
 
 		traces++;
 		vec3 visibility = VoxelShadowTrace(surfacePos, lightPos + jitter);

@@ -102,6 +102,13 @@ void main(){
 
 	vec3 finalComposite = vec3(0.0);
 
+	#ifdef VOXEL_BLOCKLIGHT
+		// Iris skips the entire shadow pass in dimensions where no program samples a
+		// shadow texture — and our voxelization lives in the shadow pass. This read is
+		// visually nil but keeps shadowtex0 active so the Nether gets voxelized.
+		finalComposite += vec3(texelFetch(shadowtex0, ivec2(0), 0).r) * 1e-8;
+	#endif
+
 	if (materialMaskSoild.sky < 0.5){
 		finalComposite += NetherLighting() * (worldNormal.y * 0.25 + 1.0);
 
