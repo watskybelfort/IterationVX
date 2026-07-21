@@ -143,7 +143,12 @@ int DoVoxelization(){
 	if (VoxelEmitterParams(id, col, level, fromTexture)){
 		if (fromTexture) col = DetectTextureColor();
 
-		imageAtomicOr(occupancyVolume, coords, (1 << 16) | (clamp(level, 0, 31) << 17));
+		int lightBits = (1 << 16) | (clamp(level, 0, 31) << 17);
+		// full-cube emitters (glowstone family, copper bulbs, magma, jack o'lantern...)
+		// also occlude: light from OTHER sources must not pass through the lamp block.
+		// Rays toward a light stop half a block early, so a light never blocks itself.
+		if (id == 89 || id == 213 || id == 7102 || id == 7103) lightBits |= 1;
+		imageAtomicOr(occupancyVolume, coords, lightBits);
 		WriteVoxelColor(coords, col);
 		return 0;
 	}

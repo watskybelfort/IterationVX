@@ -26,9 +26,12 @@ void main(){
 
 	#ifdef VOXEL_LIGHT_THINNING
 		// dense max-level emitter fields (lava lakes, fire seas): register every other
-		// voxel in x/z; the normalized lighting model keeps brightness identical
+		// voxel in x/z; the normalized lighting model keeps brightness identical.
+		// Parity is computed in WORLD space so the pattern stays stable while moving.
 		if (lightLevel >= 15){
-			ivec3 evenCoords = ivec3(coords.x & ~1, coords.y, coords.z & ~1);
+			ivec3 camFloor = ivec3(floor(cameraPosition));
+			ivec3 parity = (coords + camFloor) & ivec3(1);
+			ivec3 evenCoords = coords - ivec3(parity.x, 0, parity.z);
 			if (evenCoords != coords){
 				int neighbor = imageLoad(occupancyVolume, evenCoords).r;
 				if (VoxelIsLight(neighbor) && VoxelLightLevel(neighbor) >= 15) return;

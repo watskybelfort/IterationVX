@@ -29,10 +29,16 @@ bool VoxelFineTrace(vec3 start, vec3 dir, float tIn, float tOut, ivec3 blockVoxe
 	for (int i = 0; i < maxSteps; i++){
 		if ((imageLoad(occupancyVolume, voxel).r & solidBit) != 0) return true;
 
-		float tHit = min(min(tNext.x, tNext.y), tNext.z);
-		bvec3 axis = equal(tNext, vec3(tHit));
-		voxel += ivec3(axis) * stepDir;
-		tNext += vec3(axis) * absInv;
+		// advance exactly ONE axis per step (ties broken by priority): stepping two
+		// axes at once tunnels diagonally through corners between solid voxels
+		float tHit;
+		if (tNext.x <= tNext.y && tNext.x <= tNext.z){
+			tHit = tNext.x; voxel.x += stepDir.x; tNext.x += absInv.x;
+		}else if (tNext.y <= tNext.z){
+			tHit = tNext.y; voxel.y += stepDir.y; tNext.y += absInv.y;
+		}else{
+			tHit = tNext.z; voxel.z += stepDir.z; tNext.z += absInv.z;
+		}
 		t = tHit;
 
 		if (t >= tSpan) break;
@@ -41,9 +47,11 @@ bool VoxelFineTrace(vec3 start, vec3 dir, float tIn, float tOut, ivec3 blockVoxe
 }
 
 // DDA through the occupancy volume. start/end in continuous voxel space.
+// targetVoxel: the light's own voxel — reaching it counts as arrival (solid
+// full-cube emitters must never shadow themselves).
 // Returns the RGB transmittance of the segment: 1.0 = clear, 0.0 = blocked,
 // tinted when passing through stained glass or water (VOXEL_GLASS_TINT).
-vec3 VoxelShadowTrace(vec3 start, vec3 end){
+vec3 VoxelShadowTrace(vec3 start, vec3 end, ivec3 targetVoxel){
 	vec3 dir = end - start;
 	float len = length(dir);
 	if (len < 1e-4) return vec3(1.0);
@@ -62,13 +70,19 @@ vec3 VoxelShadowTrace(vec3 start, vec3 end){
 
 	float t = 0.0;
 	for (int i = 0; i < 64; i++){
-		// advance to the next voxel boundary and evaluate the voxel we enter
-		float tHit = min(min(tNext.x, tNext.y), tNext.z);
-		bvec3 axis = equal(tNext, vec3(tHit));
-		voxel += ivec3(axis) * stepDir;
-		tNext += vec3(axis) * absInv;
+		// advance exactly ONE axis per step (ties broken by priority): stepping two
+		// axes at once tunnels diagonally through corners between solid voxels
+		float tHit;
+		if (tNext.x <= tNext.y && tNext.x <= tNext.z){
+			tHit = tNext.x; voxel.x += stepDir.x; tNext.x += absInv.x;
+		}else if (tNext.y <= tNext.z){
+			tHit = tNext.y; voxel.y += stepDir.y; tNext.y += absInv.y;
+		}else{
+			tHit = tNext.z; voxel.z += stepDir.z; tNext.z += absInv.z;
+		}
 		t = tHit;
 		if (t >= tMax) return transmittance;
+		if (voxel == targetVoxel) return transmittance;
 		if (!InsideVoxelVolume(voxel)) return transmittance;
 
 		int occupancy = imageLoad(occupancyVolume, voxel).r;
@@ -174,7 +188,7 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 
 		weightSum += weight;
 		traces++;
-		vec3 visibility = VoxelShadowTrace(surfacePos, lightPos + jitter);
+		vec3 visibility = VoxelShadowTrace(surfacePos, lightPos + jitter, lightCoord);
 		if (max(max(visibility.r, visibility.g), visibility.b) <= 0.0) continue;
 
 		vec3 lightCol = VoxelReadLightColor(lightCoord);
@@ -190,8 +204,10 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 	}
 
 	// normalize: result is the w-weighted average of color x visibility, not an
-	// intensity. The small epsilon only softens the ratio when every weight is tiny.
-	return lighting / (weightSum + 0.002);
+	// intensity. The epsilon damps the modulation when all weights are small
+	// (far/grazing lights), which also keeps their jittered visibility noise from
+	// being amplified to full contrast.
+	return lighting / (weightSum + 0.015);
 }
 
 #endif
