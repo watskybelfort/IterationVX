@@ -274,8 +274,17 @@ void main(){
 
 			float vxFade = VoxelEdgeFade(VoxelSpacePos(worldPos));
 			vec3 blockLightTerm = vanillaBlockLight;
+			vec3 voxelSpecularHighlight = vec3(0.0);
 
-			if (vxFade < 1.0){
+			#ifdef VOXEL_SKIP_UNLIT
+				// pixels with zero vanilla block light cannot receive meaningful traced light
+				// (light range matches the lightmap range): skip all tracing there
+				bool vxDoTrace = vxFade < 1.0 && gbuffer.lightmapL.r > 0.0;
+			#else
+				bool vxDoTrace = vxFade < 1.0;
+			#endif
+
+			if (vxDoTrace){
 				#ifdef TAA
 					vec2 bn = BlueNoiseTemproal();
 				#else
@@ -283,14 +292,22 @@ void main(){
 				#endif
 				vec3 vxNoise = vec3(bn, fract((bn.x + bn.y) * 1.6180339887));
 
-				vec3 voxelLight = VoxelBlockLighting(worldPos, worldNormal, vxNoise);
+				vec3 voxelSpecularRaw = vec3(0.0);
+				vec3 voxelLight = VoxelBlockLighting(worldPos, worldNormal, vxNoise, worldDir,
+				                                     gbuffer.material.roughness, gbuffer.material.f0, voxelSpecularRaw);
 
 				float torchLum = dot(colorTorchlight, vec3(0.2126, 0.7152, 0.0722));
-				vec3 voxelTerm = voxelLight * (torchLum * (VOXELLIGHT_BRIGHTNESS * TORCHLIGHT_BRIGHTNESS * 0.015));
+				float voxelScale = torchLum * (VOXELLIGHT_BRIGHTNESS * TORCHLIGHT_BRIGHTNESS * 0.015);
+
+				vec3 voxelTerm = voxelLight * voxelScale;
 				voxelTerm *= mix(ao, vec3(1.0), 0.4);
 				voxelTerm += vanillaBlockLight * VOXEL_AMBIENT_MULT;
 
 				blockLightTerm = mix(voxelTerm, vanillaBlockLight, vxFade);
+
+				#ifdef VOXEL_SPECULAR
+					voxelSpecularHighlight = voxelSpecularRaw * (voxelScale * VOXEL_SPECULAR_STRENGTH * (1.0 - vxFade));
+				#endif
 			}
 
 			finalComposite += blockLightTerm;
@@ -375,6 +392,10 @@ void main(){
 		finalComposite *= metalnessMask;
 
 		finalComposite += specularHighlight;
+
+		#if defined VOXEL_BLOCKLIGHT && defined VOXEL_SPECULAR
+			finalComposite += voxelSpecularHighlight * mix(vec3(1.0), gbuffer.albedo, vec3(gbuffer.material.metalness));
+		#endif
 
 		finalComposite += vec3(1.0) * materialMaskSoild.lightning;
 

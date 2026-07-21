@@ -20,6 +20,17 @@ in vec3 normal;
 in vec2 blockLight;
 in float tilted;
 
+#if defined SHADOW_VOXEL && defined VOXEL_BLOCKLIGHT
+	flat in int passType;
+	in vec3 vxPosF;
+	flat in vec3 voxelFaceNormal;
+
+	uniform vec3 cameraPosition;
+
+	#define WRITE_TO_VOXELS
+	#include "/Lib/Voxel/VoxelCommon.glsl"
+#endif
+
 #ifdef PROGRAM_DH_SHADOW
 	uniform vec3 cameraPosition;
 	uniform mat4 shadowProjectionInverse;
@@ -38,6 +49,39 @@ in float tilted;
 
 
 void main(){
+	#if defined SHADOW_VOXEL && defined VOXEL_BLOCKLIGHT
+		// voxel raster fragment: write fine (sub-block) occupancy levels and stop
+		if (passType > 0){
+			vec4 voxelTex = textureLod(tex, texCoord, 0.0);
+			if (voxelTex.a > 0.5){
+				int presence = 0;
+				for (int k = 1; k <= passType; k++){
+					vec3 pos2 = vxPosF * float(1 << k) + 0.5 * vec3(voxelVolumeSize);
+					// bias fragments sitting exactly on voxel faces into the block interior
+					if (floor((pos2 - 0.003 * voxelFaceNormal) / float(1 << k)) ==
+					    floor((pos2 - 0.1561271 * voxelFaceNormal) / float(1 << k))){
+						pos2 -= 0.1561271 * voxelFaceNormal;
+					}
+					if (any(lessThan(pos2, vec3(0.0))) || any(greaterThanEqual(pos2, vec3(voxelVolumeSize) - 0.01))) break;
+					imageAtomicOr(occupancyVolume, ivec3(pos2), 1 << k);
+					presence |= 1 << (3 + k);
+				}
+				// record on the block-level voxel which fine levels really exist,
+				// so the tracer never assumes fine data that was not written
+				if (presence != 0){
+					vec3 pos0 = vxPosF + 0.5 * vec3(voxelVolumeSize);
+					if (floor(pos0 - 0.003 * voxelFaceNormal) == floor(pos0 - 0.1561271 * voxelFaceNormal)){
+						pos0 -= 0.1561271 * voxelFaceNormal;
+					}
+					if (!(any(lessThan(pos0, vec3(0.0))) || any(greaterThanEqual(pos0, vec3(voxelVolumeSize) - 0.01)))){
+						imageAtomicOr(occupancyVolume, ivec3(pos0), presence);
+					}
+				}
+			}
+			discard;
+		}
+	#endif
+
 	#ifdef PROGRAM_DH_SHADOW
 		#ifdef DH_SHADOW_CULLING
 			vec3 viewPosOrigin = viewPos;

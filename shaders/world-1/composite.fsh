@@ -1,4 +1,4 @@
-#version 330
+#version 430
 
 
 #define DIMENSION_NETHER
@@ -24,7 +24,7 @@ const bool	colortex2Clear          = false;
 const bool	colortex7Clear          = false;
 
 
-const float shadowDistanceRenderMul 	= 0.007;
+const float shadowDistanceRenderMul 	= 0.35;
 
 const bool 	shadowHardwareFiltering1 	= false;
 const bool 	shadowtex0Mipmap 			= false;
@@ -66,6 +66,10 @@ in vec3 colorTorchlight;
 #include "/Lib/BasicFounctions/TemporalNoise.glsl"
 #include "/Lib/BasicFounctions/Blocklight.glsl"
 #include "/Lib/BasicFounctions/NetherColor.glsl"
+
+#ifdef VOXEL_BLOCKLIGHT
+	#include "/Lib/Voxel/VoxelTrace.glsl"
+#endif
 
 #include "/Lib/IndividualFounctions/GTAO.glsl"
 
@@ -122,14 +126,62 @@ void main(){
 
 		if(heldBlockLightValue + heldBlockLightValue2 > 0.0)
 			finalComposite += HeldLighting(viewPos, viewDir, gbuffer.normalL, gbuffer.material.roughness, ao, materialMask.hand > 0.5);
-		finalComposite += BlockLighting(gbuffer.lightmapL.r, ao, materialMaskSoild);
+
+		#ifdef VOXEL_BLOCKLIGHT
+			vec3 vanillaBlockLight = BlockLighting(gbuffer.lightmapL.r, ao, materialMaskSoild);
+
+			vec3 worldPos = mat3(gbufferModelViewInverse) * viewPos;
+			float vxFade = VoxelEdgeFade(VoxelSpacePos(worldPos));
+			vec3 blockLightTerm = vanillaBlockLight;
+			vec3 voxelSpecularHighlight = vec3(0.0);
+
+			#ifdef VOXEL_SKIP_UNLIT
+				bool vxDoTrace = vxFade < 1.0 && gbuffer.lightmapL.r > 0.0;
+			#else
+				bool vxDoTrace = vxFade < 1.0;
+			#endif
+
+			if (vxDoTrace){
+				#ifdef TAA
+					vec2 bn = BlueNoiseTemproal();
+				#else
+					vec2 bn = BlueNoise();
+				#endif
+				vec3 vxNoise = vec3(bn, fract((bn.x + bn.y) * 1.6180339887));
+
+				vec3 voxelSpecularRaw = vec3(0.0);
+				vec3 voxelLight = VoxelBlockLighting(worldPos, worldNormal, vxNoise, normalize(worldPos),
+				                                     gbuffer.material.roughness, gbuffer.material.f0, voxelSpecularRaw);
+
+				float torchLum = dot(colorTorchlight, vec3(0.2126, 0.7152, 0.0722));
+				float voxelScale = torchLum * (VOXELLIGHT_BRIGHTNESS * TORCHLIGHT_BRIGHTNESS * 0.15);
+
+				vec3 voxelTerm = voxelLight * voxelScale;
+				voxelTerm *= mix(ao, vec3(1.0), 0.4);
+				voxelTerm += vanillaBlockLight * VOXEL_AMBIENT_MULT;
+
+				blockLightTerm = mix(voxelTerm, vanillaBlockLight, vxFade);
+
+				#ifdef VOXEL_SPECULAR
+					voxelSpecularHighlight = voxelSpecularRaw * (voxelScale * VOXEL_SPECULAR_STRENGTH * (1.0 - vxFade));
+				#endif
+			}
+
+			finalComposite += blockLightTerm;
+		#else
+			finalComposite += BlockLighting(gbuffer.lightmapL.r, ao, materialMaskSoild);
+		#endif
 
 		finalComposite *= mix(vec3(1.0), NetherFogColor().rgb, gbuffer.material.metalness * 0.7);
 		finalComposite *= (1.0 - gbuffer.material.metalness * 0.75);
 		
 		finalComposite += TextureLighting(gbuffer.albedo, gbuffer.lightmapL.r, gbuffer.material.emissiveness, materialMaskSoild);
-		
+
 		finalComposite *= gbuffer.albedo;
+
+		#if defined VOXEL_BLOCKLIGHT && defined VOXEL_SPECULAR
+			finalComposite += voxelSpecularHighlight * mix(vec3(1.0), gbuffer.albedo, vec3(gbuffer.material.metalness));
+		#endif
 
 	}else{
 		finalComposite = vec3(0.0);

@@ -1,6 +1,8 @@
-#version 330 compatibility
+#version 430 compatibility
 
 
-void main(){
-    gl_FragData[0] = vec4(0.0);
-}
+#define DIMENSION_NETHER
+#define SHADOW_VOXEL
+
+
+#include "/Lib/Programs/Gbuffers/Shadow_FS.glsl"

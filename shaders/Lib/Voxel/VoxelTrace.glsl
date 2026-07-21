@@ -6,45 +6,106 @@
 
 #include "/Lib/Voxel/VoxelCommon.glsl"
 
-// DDA through the occupancy volume. start/end in continuous voxel space.
-// Returns 1.0 if the segment is unoccluded, 0.0 if a solid voxel blocks it.
-float VoxelShadowTrace(vec3 start, vec3 end){
-	vec3 dir = end - start;
-	float len = length(dir);
-	if (len < 1e-4) return 1.0;
-	dir /= len;
+// Fine sub-block DDA inside one block-level voxel, in the level-k grid.
+// Returns true if a level-k solid voxel is hit between tIn and tOut along start+t*dir.
+bool VoxelFineTrace(vec3 start, vec3 dir, float tIn, float tOut, ivec3 blockVoxel, int k){
+	float scale = float(1 << k);
+	vec3 half_ = vec3(voxelVolumeSize / 2);
 
-	// stop slightly before the light voxel so the source voxel never occludes itself
-	float tMax = len - 0.5;
-	if (tMax <= 0.0) return 1.0;
+	// position in the level-k scaled grid
+	vec3 p = ((start + (tIn + 1e-4) * dir) - half_) * scale + half_;
+	vec3 fdir = dir; // direction is unchanged by uniform scaling
 
-	ivec3 voxel = ivec3(floor(start));
-	ivec3 stepDir = ivec3(sign(dir));
-	vec3 absInv = 1.0 / max(abs(dir), vec3(1e-6));
-	vec3 tNext = (sign(dir) * (0.5 - fract(start)) + 0.5) * absInv;
+	ivec3 voxel = ivec3(floor(p));
+	ivec3 stepDir = ivec3(sign(fdir));
+	vec3 absInv = 1.0 / max(abs(fdir), vec3(1e-6));
+	vec3 tNext = (sign(fdir) * (0.5 - fract(p)) + 0.5) * absInv;
+
+	float tSpan = (tOut - tIn) * scale; // remaining distance in fine units
+	int maxSteps = 3 * (1 << k) + 2;
+	int solidBit = 1 << k;
 
 	float t = 0.0;
-	for (int i = 0; i < 64; i++){
-		// advance to the next voxel boundary
+	for (int i = 0; i < maxSteps; i++){
+		if ((imageLoad(occupancyVolume, voxel).r & solidBit) != 0) return true;
+
 		float tHit = min(min(tNext.x, tNext.y), tNext.z);
 		bvec3 axis = equal(tNext, vec3(tHit));
 		voxel += ivec3(axis) * stepDir;
 		tNext += vec3(axis) * absInv;
 		t = tHit;
 
-		if (t >= tMax) return 1.0;
-		if (!InsideVoxelVolume(voxel)) return 1.0;
-
-		if (VoxelIsSolid(imageLoad(occupancyVolume, voxel).r)) return 0.0;
+		if (t >= tSpan) break;
 	}
-	return 1.0;
+	return false;
+}
+
+// DDA through the occupancy volume. start/end in continuous voxel space.
+// Returns the RGB transmittance of the segment: 1.0 = clear, 0.0 = blocked,
+// tinted when passing through stained glass or water (VOXEL_GLASS_TINT).
+vec3 VoxelShadowTrace(vec3 start, vec3 end){
+	vec3 dir = end - start;
+	float len = length(dir);
+	if (len < 1e-4) return vec3(1.0);
+	dir /= len;
+
+	// stop slightly before the light voxel so the source voxel never occludes itself
+	float tMax = len - 0.5;
+	if (tMax <= 0.0) return vec3(1.0);
+
+	ivec3 voxel = ivec3(floor(start));
+	ivec3 stepDir = ivec3(sign(dir));
+	vec3 absInv = 1.0 / max(abs(dir), vec3(1e-6));
+	vec3 tNext = (sign(dir) * (0.5 - fract(start)) + 0.5) * absInv;
+
+	vec3 transmittance = vec3(1.0);
+
+	float t = 0.0;
+	for (int i = 0; i < 64; i++){
+		// advance to the next voxel boundary and evaluate the voxel we enter
+		float tHit = min(min(tNext.x, tNext.y), tNext.z);
+		bvec3 axis = equal(tNext, vec3(tHit));
+		voxel += ivec3(axis) * stepDir;
+		tNext += vec3(axis) * absInv;
+		t = tHit;
+		if (t >= tMax) return transmittance;
+		if (!InsideVoxelVolume(voxel)) return transmittance;
+
+		int occupancy = imageLoad(occupancyVolume, voxel).r;
+
+		if ((occupancy & 1) != 0){
+			#if VOXEL_DETAIL > 1
+				// refine only with fine levels that were REALLY written for this block
+				// (presence bits 4-6); a solid block without fine data stays fully solid
+				int k = (occupancy & (1 << 6)) != 0 ? 3 :
+				        ((occupancy & (1 << 5)) != 0 ? 2 :
+				        ((occupancy & (1 << 4)) != 0 ? 1 : 0));
+				if (k == 0) return vec3(0.0);
+
+				float tExit = min(min(min(tNext.x, tNext.y), tNext.z), tMax);
+				if (VoxelFineTrace(start, dir, t, tExit, voxel, k)) return vec3(0.0);
+				// ray slips through the gaps of a partial block: keep going
+			#else
+				return vec3(0.0);
+			#endif
+		}
+		#ifdef VOXEL_GLASS_TINT
+			else if ((occupancy & (1 << 8)) != 0){
+				vec3 tintCol = VoxelReadLightColor(voxel);
+				float strength = (occupancy & (1 << 9)) != 0 ? 0.22 : 0.65;
+				transmittance *= mix(vec3(1.0), tintCol, strength);
+			}
+		#endif
+	}
+	return transmittance;
 }
 
 
 // scenePos: camera-relative world pos of the shaded point. worldNormal: world-space normal.
 // noise: per-frame jitter in [0,1)^3 for penumbra (smoothed by TAA).
-// Returns accumulated RGB light (unit peak color * attenuation), to be scaled by the caller.
-vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise){
+// worldViewDir: normalized direction camera->surface (world space), for specular.
+// Returns accumulated RGB diffuse light; specular highlight accumulates into voxelSpecular.
+vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldViewDir, float roughness, float f0, inout vec3 voxelSpecular){
 	vec3 voxelPos = VoxelSpacePos(scenePos);
 
 	if (VoxelEdgeFade(voxelPos) >= 1.0) return vec3(0.0);
@@ -91,12 +152,19 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise){
 		if (weight < 0.002) continue;
 
 		traces++;
-		float visibility = VoxelShadowTrace(surfacePos, lightPos + jitter);
-		if (visibility <= 0.0) continue;
+		vec3 visibility = VoxelShadowTrace(surfacePos, lightPos + jitter);
+		if (max(max(visibility.r, visibility.g), visibility.b) <= 0.0) continue;
 
 		vec3 lightCol = VoxelReadLightColor(lightCoord);
 
-		lighting += lightCol * (weight * visibility);
+		lighting += lightCol * visibility * weight;
+
+		#ifdef VOXEL_SPECULAR
+			float ggx = SpecularGGX(worldNormal, -worldViewDir, toLight / max(dist, 1e-4),
+			                        clamp(roughness, 0.0015, 0.9), f0);
+			ggx *= saturate(4.0 - roughness * 3.5);
+			voxelSpecular += lightCol * visibility * (ggx * atten);
+		#endif
 	}
 
 	return lighting;

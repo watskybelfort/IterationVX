@@ -14,7 +14,14 @@ const int   voxelCellTotal = voxelCellCount.x * voxelCellCount.y * voxelCellCoun
 const int   VOXEL_MAX_LIGHTS_PER_CELL = 64;
 
 // occupancyVolume bit layout (r32i per voxel):
-//   bit  0     : solid occluder
+//   bits 0-3   : solid occluder at detail level k (level k voxels are 1/2^k blocks,
+//                covering the central voxelVolumeSize/2^k region around the camera;
+//                bit 0 is conservative: set whenever any finer level is set)
+//   bits 4-6   : fine data presence: level 1/2/3 was actually rasterized for this block.
+//                If a solid block has no presence bits, it must be treated as fully
+//                solid (never assume fine data that was not written -> no light leaks).
+//   bit  8     : translucent tint voxel (stained glass / water), color in voxelCols
+//   bit  9     : water (weaker tint than glass)
 //   bit  16    : light source present
 //   bits 17-21 : light level (0..31)
 
@@ -76,6 +83,25 @@ ivec3 UnpackVoxelCoord(int p){
 
 int VoxelLightLevel(int occupancyData){
 	return (occupancyData >> 17) & 31;
+}
+
+// Finest detail level with data at camera-relative position p (voxel units).
+// margin < 1.0 shrinks the region: use ~0.9 when READING so the level chosen is
+// always one the voxelizer (margin 1.0) actually wrote near region boundaries.
+int VoxelDetailLevel(vec3 pCamRel, float margin){
+	vec3 rel = abs(pCamRel) * (2.0 / vec3(voxelVolumeSize));
+	float m = max(max(rel.x, rel.y), rel.z);
+	int k = 0;
+	for (int i = 1; i < VOXEL_DETAIL; i++){
+		if (m * float(1 << i) < margin) k = i;
+	}
+	return k;
+}
+
+// voxelPos = camera-relative + voxelVolumeSize/2 (continuous). Coord in the level-k grid.
+ivec3 VoxelCoordAtLevel(vec3 voxelPos, int k){
+	vec3 p = voxelPos - vec3(voxelVolumeSize / 2);
+	return ivec3(floor(p * float(1 << k) + 1000.0) - 1000) + voxelVolumeSize / 2;
 }
 
 bool VoxelIsLight(int occupancyData){

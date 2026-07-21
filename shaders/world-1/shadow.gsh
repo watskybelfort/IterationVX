@@ -5,4 +5,4 @@
 #define SHADOW_VOXEL
 
 
-#include "/Lib/Programs/Gbuffers/Shadow_VS.glsl"
+#include "/Lib/Programs/Gbuffers/Shadow_GS.glsl"
