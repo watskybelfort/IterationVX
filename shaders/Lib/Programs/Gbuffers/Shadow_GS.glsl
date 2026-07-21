@@ -118,11 +118,10 @@ int DoVoxelization(){
 
 	if (translucentStage){
 		#ifdef VOXEL_GLASS_TINT
-			if (id == 8){ // water: mild blue tint
-				if ((imageAtomicOr(occupancyVolume, coords, (1 << 8) | (1 << 9)) & (1 << 8)) == 0)
-					WriteVoxelColor(coords, vec3(0.35, 0.62, 1.0));
-			}else if (id == 79){ // ice
-				if ((imageAtomicOr(occupancyVolume, coords, (1 << 8) | (1 << 9)) & (1 << 8)) == 0)
+			if (id == 8){ // water: constant tint applied at trace time, no color storage
+				imageAtomicOr(occupancyVolume, coords, (1 << 8) | (1 << 9));
+			}else if (id == 79){ // ice: pale blue, stored color (glass path)
+				if ((imageAtomicOr(occupancyVolume, coords, 1 << 8) & (1 << 8)) == 0)
 					WriteVoxelColor(coords, vec3(0.60, 0.78, 1.0));
 			}else if (id == 95){ // stained glass, honey/slime, nether portal
 				imageAtomicOr(occupancyVolume, coords, 1 << 8);

@@ -16,5 +16,7 @@
 #define VOXEL_SPECULAR // Ray-traced specular highlights from block lights (shiny reflections of torches etc.)
 #define VOXEL_SPECULAR_STRENGTH 1.0 // [0.25 0.5 0.75 1.0 1.5 2.0 3.0]
 #define VOXEL_SKIP_UNLIT // Skip ray tracing on pixels with zero vanilla block light (big speedup, no visual cost)
+#define VOXEL_LIGHT_THINNING // In dense emitter fields (lava lakes) register every other emitter; the normalized lighting model keeps brightness identical, shadows get marginally coarser
+#define VOXEL_DEBUG 0 // [0 1] Debug: paint the raw traced factor (color x shadows) instead of lighting. For diagnosing, best viewed in caves/Nether.
 
 #endif

@@ -173,6 +173,10 @@ void main(){
 					specScale *= saturate(gbuffer.lightmapL.r * 2.0) * (1.0 - vxFade);
 					voxelSpecularHighlight = voxelSpecularRaw * specScale;
 				#endif
+
+				#if VOXEL_DEBUG == 1
+					blockLightTerm = tracedFactor * 0.05;
+				#endif
 			}
 
 			finalComposite += blockLightTerm;

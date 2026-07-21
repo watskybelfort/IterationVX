@@ -22,7 +22,21 @@ void main(){
 	int occupancy = imageLoad(occupancyVolume, coords).r;
 	if (!VoxelIsLight(occupancy)) return;
 
-	float range = float(VoxelLightLevel(occupancy)) * VOXEL_RANGE_MULT;
+	int lightLevel = VoxelLightLevel(occupancy);
+
+	#ifdef VOXEL_LIGHT_THINNING
+		// dense max-level emitter fields (lava lakes, fire seas): register every other
+		// voxel in x/z; the normalized lighting model keeps brightness identical
+		if (lightLevel >= 15){
+			ivec3 evenCoords = ivec3(coords.x & ~1, coords.y, coords.z & ~1);
+			if (evenCoords != coords){
+				int neighbor = imageLoad(occupancyVolume, evenCoords).r;
+				if (VoxelIsLight(neighbor) && VoxelLightLevel(neighbor) >= 15) return;
+			}
+		}
+	#endif
+
+	float range = float(lightLevel) * VOXEL_RANGE_MULT;
 	if (range < 0.5) return;
 
 	ivec3 cellMin = clamp(ivec3(floor(vec3(coords) + 0.5 - range)) >> 3, ivec3(0), voxelCellCount - 1);

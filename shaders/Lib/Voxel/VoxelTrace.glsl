@@ -91,9 +91,16 @@ vec3 VoxelShadowTrace(vec3 start, vec3 end){
 		}
 		#ifdef VOXEL_GLASS_TINT
 			else if ((occupancy & (1 << 8)) != 0){
-				vec3 tintCol = VoxelReadLightColor(voxel);
-				float strength = (occupancy & (1 << 9)) != 0 ? 0.22 : 0.65;
-				transmittance *= mix(vec3(1.0), tintCol, strength);
+				if ((occupancy & (1 << 9)) != 0){
+					// water: constant tint, no image reads (critical underwater, where
+					// every ray of every pixel crosses many water voxels)
+					transmittance *= vec3(0.857, 0.916, 1.0);
+				}else{
+					vec3 tintCol = VoxelReadLightColor(voxel);
+					transmittance *= mix(vec3(1.0), tintCol, 0.65);
+				}
+				// deep tinted paths cannot contribute visibly: stop early
+				if (max(max(transmittance.r, transmittance.g), transmittance.b) < 0.03) return vec3(0.0);
 			}
 		#endif
 	}
@@ -160,6 +167,10 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 
 		float weight = atten * ndotl;
 		if (weight < 1e-5) continue;
+
+		// lights are sorted nearest-first per cell: once the remaining lights can
+		// only shift the normalized average by <1%, stop tracing (invisible change)
+		if (traces >= 4 && weight < 0.01 * weightSum) break;
 
 		weightSum += weight;
 		traces++;
