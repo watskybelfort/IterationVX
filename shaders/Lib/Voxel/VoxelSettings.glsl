@@ -11,7 +11,7 @@
 #define VOXEL_AMBIENT_MULT 0.20 // [0.0 0.05 0.10 0.15 0.20 0.25 0.30 0.40 0.50 0.75 1.0]
 #define VOXEL_RANGE_MULT 1.0 // [0.75 1.0 1.25 1.5]
 #define VOXEL_COLOR_SATURATION 0.5 // [0.0 0.25 0.5 0.75 1.0]
-#define VOXEL_DETAIL 3 // [1 2 3 4]
+#define VOXEL_DETAIL 1 // [1 2 3 4] 1 = block-solid occlusion (airtight, recommended). 2-4 = EXPERIMENTAL sub-block shadow detail (stairs/slabs), can leak light in some scenes.
 #define VOXEL_GLASS_TINT // Light rays passing through stained glass and water get tinted by their color.
 #define VOXEL_SPECULAR // Ray-traced specular highlights from block lights (shiny reflections of torches etc.)
 #define VOXEL_SPECULAR_STRENGTH 1.0 // [0.25 0.5 0.75 1.0 1.5 2.0 3.0]
