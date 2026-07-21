@@ -299,6 +299,12 @@ void main(){
 				float torchLum = dot(colorTorchlight, vec3(0.2126, 0.7152, 0.0722));
 				float voxelScale = torchLum * (VOXELLIGHT_BRIGHTNESS * TORCHLIGHT_BRIGHTNESS * 0.015);
 
+				// envelope the traced light with the vanilla lightmap falloff: the
+				// traced light then dies out along the exact same contours as vanilla
+				// block light (which never shows rings), instead of at a fixed radius
+				float vxEnvelope = saturate(gbuffer.lightmapL.r * 2.0);
+				voxelScale *= vxEnvelope;
+
 				vec3 voxelTerm = voxelLight * voxelScale;
 				voxelTerm *= mix(ao, vec3(1.0), 0.4);
 				voxelTerm += vanillaBlockLight * VOXEL_AMBIENT_MULT;

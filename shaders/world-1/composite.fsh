@@ -163,6 +163,10 @@ void main(){
 				float torchLum = dot(colorTorchlight, vec3(0.2126, 0.7152, 0.0722));
 				float voxelScale = torchLum * (VOXELLIGHT_BRIGHTNESS * TORCHLIGHT_BRIGHTNESS * 0.15);
 
+				// same vanilla-lightmap envelope as the overworld (kills the range ring)
+				float vxEnvelope = saturate(gbuffer.lightmapL.r * 2.0);
+				voxelScale *= vxEnvelope;
+
 				vec3 voxelTerm = voxelLight * voxelScale;
 				voxelTerm *= mix(ao, vec3(1.0), 0.4);
 				voxelTerm += vanillaBlockLight * VOXEL_AMBIENT_MULT;
