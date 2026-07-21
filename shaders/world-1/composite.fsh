@@ -157,24 +157,21 @@ void main(){
 				vec3 vxNoise = vec3(bn, fract((bn.x + bn.y) * 1.6180339887));
 
 				vec3 voxelSpecularRaw = vec3(0.0);
-				vec3 voxelLight = VoxelBlockLighting(worldPos, worldNormal, vxNoise, normalize(worldPos),
-				                                     gbuffer.material.roughness, gbuffer.material.f0, voxelSpecularRaw);
+				vec3 tracedFactor = VoxelBlockLighting(worldPos, worldNormal, vxNoise, normalize(worldPos),
+				                                       gbuffer.material.roughness, gbuffer.material.f0, voxelSpecularRaw);
 
-				float torchLum = dot(colorTorchlight, vec3(0.2126, 0.7152, 0.0722));
-				float voxelScale = torchLum * (VOXELLIGHT_BRIGHTNESS * TORCHLIGHT_BRIGHTNESS * 0.15);
-
-				// same vanilla-lightmap envelope as the overworld (kills the range ring)
-				float vxEnvelope = saturate(gbuffer.lightmapL.r * 2.0);
-				voxelScale *= vxEnvelope;
-
-				vec3 voxelTerm = voxelLight * voxelScale;
-				voxelTerm *= mix(ao, vec3(1.0), 0.4);
-				voxelTerm += vanillaBlockLight * VOXEL_AMBIENT_MULT;
+				// brightness profile = vanilla block light; the trace only modulates it
+				vec3 modulation = saturate(vec3(VOXEL_AMBIENT_MULT) +
+				                  tracedFactor * (1.5 * VOXELLIGHT_BRIGHTNESS * (1.0 - VOXEL_AMBIENT_MULT)));
+				vec3 voxelTerm = vanillaBlockLight * modulation;
 
 				blockLightTerm = mix(voxelTerm, vanillaBlockLight, vxFade);
 
 				#ifdef VOXEL_SPECULAR
-					voxelSpecularHighlight = voxelSpecularRaw * (voxelScale * VOXEL_SPECULAR_STRENGTH * (1.0 - vxFade));
+					float torchLum = dot(colorTorchlight, vec3(0.2126, 0.7152, 0.0722));
+					float specScale = torchLum * (TORCHLIGHT_BRIGHTNESS * 0.15 * VOXEL_SPECULAR_STRENGTH);
+					specScale *= saturate(gbuffer.lightmapL.r * 2.0) * (1.0 - vxFade);
+					voxelSpecularHighlight = voxelSpecularRaw * specScale;
 				#endif
 			}
 

@@ -104,7 +104,11 @@ vec3 VoxelShadowTrace(vec3 start, vec3 end){
 // scenePos: camera-relative world pos of the shaded point. worldNormal: world-space normal.
 // noise: per-frame jitter in [0,1)^3 for penumbra (smoothed by TAA).
 // worldViewDir: normalized direction camera->surface (world space), for specular.
-// Returns accumulated RGB diffuse light; specular highlight accumulates into voxelSpecular.
+// Returns a NORMALIZED modulation factor in [0,1]: the weighted average of
+// (light color x traced visibility x shading) over all reachable lights.
+// It carries the ray-traced color, shadows and directionality but NO intensity
+// profile of its own — the caller multiplies it onto the vanilla block light,
+// so the light can never cut off anywhere vanilla light does not.
 vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldViewDir, float roughness, float f0, inout vec3 voxelSpecular){
 	vec3 voxelPos = VoxelSpacePos(scenePos);
 
@@ -123,6 +127,7 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 	vec3 jitter = (noise * 2.0 - 1.0) * VOXEL_LIGHT_SIZE * 0.5;
 
 	vec3 lighting = vec3(0.0);
+	float weightSum = 0.0;
 	int traces = 0;
 
 	for (int i = 0; i < count && traces < VOXEL_MAX_TRACES; i++){
@@ -154,8 +159,9 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 		float atten = window * 3.0 / (dist * dist + 0.5);
 
 		float weight = atten * ndotl;
-		if (weight < 0.0002) continue;
+		if (weight < 1e-5) continue;
 
+		weightSum += weight;
 		traces++;
 		vec3 visibility = VoxelShadowTrace(surfacePos, lightPos + jitter);
 		if (max(max(visibility.r, visibility.g), visibility.b) <= 0.0) continue;
@@ -172,7 +178,9 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 		#endif
 	}
 
-	return lighting;
+	// normalize: result is the w-weighted average of color x visibility, not an
+	// intensity. The small epsilon only softens the ratio when every weight is tiny.
+	return lighting / (weightSum + 0.002);
 }
 
 #endif
