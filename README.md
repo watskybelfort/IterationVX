@@ -1,59 +1,61 @@
 # IterationVX
 
-**IterationT 3.2.0 + iluminación de bloques ray-traced por voxeles**, al estilo de *Rethinking Voxels*, para Minecraft con **Iris**.
+🌐 **English** · [Español](README.es.md)
 
-IterationVX toma el shader pack IterationT (edición de Chocapic13 por Tahnass) y le injerta un sistema de iluminación de bloques completamente nuevo: el mundo se voxeliza en tiempo real y cada píxel traza rayos hacia las fuentes de luz cercanas.
+**IterationT 3.2.0 + ray-traced voxel block lighting**, in the style of *Rethinking Voxels*, for Minecraft with **Iris**.
+
+IterationVX takes the IterationT shader pack (a Chocapic13 edit by Tahnass) and grafts a completely new block lighting system onto it: the world is voxelized in real time and every pixel traces rays toward nearby light sources.
 
 ---
 
-## ✨ Características
+## ✨ Features
 
-- **Luz coloreada por bloque** — cada fuente emite su propio color: glowstone amarillo, sea lantern azulada, fuego de alma turquesa, amatista violeta, froglights, velas, lava… El color se detecta automáticamente de la textura cuando no está definido a mano.
-- **Sombras ray-traced** — las antorchas y lámparas proyectan sombras nítidas contra los bloques del mundo, trazadas por rayos contra el volumen voxel (128×96×128 alrededor de la cámara).
-- **Reflejos especulares ray-traced** — las luces se reflejan en superficies pulidas con su color, y el reflejo respeta las sombras.
-- **Tinte a través de translúcidos** — la luz que atraviesa cristales tintados se tiñe de su color; bajo el agua la luz se vuelve azulada.
-- **Sin artefactos de alcance** — el apagado de cada luz sigue exactamente el perfil de la iluminación vanilla de IterationT (modelo de modulación normalizada), así que no hay anillos ni cortes visibles.
-- **Optimizado** — los píxeles sin luz de bloque no trazan nada (coste ~cero en exteriores), listas de luces por celdas con ordenación determinista, y atajos matemáticamente invisibles en escenas con muchas luces.
-- **Compatible con Distant Horizons** — el terreno LOD lejano se renderiza perfectamente con el sistema voxel activo (soporte DH de IterationT intacto, incluidas las sombras DH opcionales).
-- Todo lo demás de IterationT intacto: cielo, nubes volumétricas, agua, TAA, bloom, GI…
+- **Colored light per block** — every source emits its own color: yellow glowstone, bluish sea lanterns, turquoise soul fire, violet amethyst, froglights, candles, lava… The color is detected automatically from the texture when it isn't defined by hand.
+- **Ray-traced shadows** — torches and lamps cast crisp shadows against the blocks of the world, traced against the voxel volume (128×96×128 around the camera).
+- **Ray-traced specular reflections** — lights reflect off polished surfaces with their own color, and the reflection respects shadows.
+- **Tint through translucents** — light passing through stained glass gets tinted by its color; underwater, light turns bluish.
+- **No range artifacts** — each light's falloff follows exactly the vanilla lighting profile of IterationT (normalized modulation model), so there are no visible rings or cutoffs.
+- **Optimized** — pixels with no block light trace nothing (near-zero cost outdoors), per-cell light lists with deterministic ordering, and mathematically invisible shortcuts in scenes with many lights.
+- **Distant Horizons compatible** — far LOD terrain renders perfectly with the voxel system active (IterationT's DH support intact, including the optional DH shadows).
+- Everything else from IterationT untouched: sky, volumetric clouds, water, TAA, bloom, GI…
 
-## 📸 Capturas
+## 📸 Screenshots
 
-Comparativas en las mismas escenas: **IterationT 3.2.0 (antes)** frente a **IterationVX (después)**.
+Comparisons in the same scenes: **IterationT 3.2.0 (before)** vs **IterationVX (after)**.
 
-**1 — Antorcha en una cueva: sombras nítidas trazadas por rayos y luz cálida rebotando en la piedra**
+**1 — Torch in a cave: crisp ray-traced shadows and warm light bouncing off the stone**
 
-| Antes | Después |
+| Before | After |
 |---|---|
-| ![Cueva antes](docs/screenshots/01-before.jpg) | ![Cueva después](docs/screenshots/01-after.jpg) |
+| ![Cave before](docs/screenshots/01-before.jpg) | ![Cave after](docs/screenshots/01-after.jpg) |
 
-**2 — Luz roja: el color del emisor baña el pasillo y la pared bloquea la luz de verdad**
+**2 — Red light: the emitter's color floods the hallway and the wall truly blocks the light**
 
-| Antes | Después |
+| Before | After |
 |---|---|
-| ![Luz roja antes](docs/screenshots/02-before.jpg) | ![Luz roja después](docs/screenshots/02-after.jpg) |
+| ![Red light before](docs/screenshots/02-before.jpg) | ![Red light after](docs/screenshots/02-after.jpg) |
 
-**3 — Fuentes de colores alternos: cada luz proyecta su propio color y sus propias sombras**
+**3 — Alternating colored sources: every light casts its own color and its own shadows**
 
-| Antes | Después |
+| Before | After |
 |---|---|
-| ![Colores antes](docs/screenshots/03-before.jpg) | ![Colores después](docs/screenshots/03-after.jpg) |
+| ![Colors before](docs/screenshots/03-before.jpg) | ![Colors after](docs/screenshots/03-after.jpg) |
 
-**4 — Luz fría entrando por una abertura: sombras largas y definidas sobre el suelo**
+**4 — Cold light through an opening: long, defined shadows across the floor**
 
-| Antes | Después |
+| Before | After |
 |---|---|
-| ![Luz fría antes](docs/screenshots/04-before.jpg) | ![Luz fría después](docs/screenshots/04-after.jpg) |
+| ![Cold light before](docs/screenshots/04-before.jpg) | ![Cold light after](docs/screenshots/04-after.jpg) |
 
-**5 — Luz azul: el color se detecta automáticamente y tiñe toda la sala**
+**5 — Blue light: the color is detected automatically and tints the whole room**
 
-| Antes | Después |
+| Before | After |
 |---|---|
-| ![Luz azul antes](docs/screenshots/05-before.jpg) | ![Luz azul después](docs/screenshots/05-after.jpg) |
+| ![Blue light before](docs/screenshots/05-before.jpg) | ![Blue light after](docs/screenshots/05-after.jpg) |
 
-### 🌌 El End
+### 🌌 The End
 
-El cielo del End de IterationT, intacto en IterationVX:
+IterationT's End sky, untouched in IterationVX:
 
 | | |
 |---|---|
@@ -61,86 +63,86 @@ El cielo del End de IterationT, intacto en IterationVX:
 
 ### 🗺️ Distant Horizons
 
-Totalmente compatible: el terreno LOD de Distant Horizons se funde con el terreno real sin costuras, con el sistema de luz voxel funcionando a la vez.
+Fully compatible: Distant Horizons LOD terrain blends seamlessly with real terrain, with the voxel lighting system running at the same time.
 
-![Vista con Distant Horizons](docs/screenshots/distant-horizons.jpg)
+![Distant Horizons view](docs/screenshots/distant-horizons.jpg)
 
-## 📋 Requisitos
+## 📋 Requirements
 
 | | |
 |---|---|
-| **Loader de shaders** | [Iris](https://irisshaders.dev/) 1.6.1 o superior — **OptiFine NO es compatible** (el sistema usa compute shaders, imágenes 3D y SSBOs) |
-| **Minecraft** | Las mismas versiones que soporta IterationT 3.2.0 (1.13+, recomendado 1.18+) |
-| **GPU** | Cualquiera con OpenGL 4.3 (NVIDIA / AMD / Intel modernas) |
-| **Distant Horizons** | ✅ Compatible (probado con el sistema voxel activo) |
+| **Shader loader** | [Iris](https://irisshaders.dev/) 1.6.1 or newer — **OptiFine is NOT supported** (the system uses compute shaders, 3D images and SSBOs) |
+| **Minecraft** | The same versions IterationT 3.2.0 supports (1.13+, 1.18+ recommended) |
+| **GPU** | Anything with OpenGL 4.3 (modern NVIDIA / AMD / Intel) |
+| **Distant Horizons** | ✅ Compatible (tested with the voxel system active) |
 
-## 📥 Instalación
+## 📥 Installation
 
-1. Descarga el `.zip` de la [última release](../../releases/latest).
-2. Cópialo a la carpeta `shaderpacks` de tu instancia de Minecraft (no lo descomprimas).
-3. En el juego: **Opciones de vídeo → Shader Packs → IterationVX** y aplica.
+1. Download the `.zip` from the [latest release](../../releases/latest).
+2. Copy it into your Minecraft instance's `shaderpacks` folder (don't unzip it).
+3. In game: **Video Settings → Shader Packs → IterationVX** and apply.
 
-## ⚙️ Configuración
+## ⚙️ Settings
 
-Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
+Menu: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 
-| Opción | Descripción |
+| Option | Description |
 |---|---|
-| `VOXEL_BLOCKLIGHT` | Interruptor general del sistema voxel |
-| `VOXELLIGHT_BRIGHTNESS` | Facilidad con la que la luz trazada alcanza el brillo pleno |
-| `VOXEL_DETAIL` | `1` = oclusión por bloque (hermética, recomendada). `2–4` = detalle sub-bloque **experimental** (escaleras/losas), puede fugar luz en algunas escenas |
-| `VOXEL_GLASS_TINT` | Tinte de la luz al atravesar cristales tintados / agua / hielo |
-| `VOXEL_SPECULAR` + `VOXEL_SPECULAR_STRENGTH` | Reflejos especulares de las luces de bloque |
-| `VOXEL_LIGHT_SIZE` | Tamaño de la fuente (penumbra suave, se acumula con TAA) |
-| `VOXEL_MAX_TRACES` | Rayos máximos por píxel (rendimiento) |
-| `VOXEL_AMBIENT_MULT` | Luz vanilla que se conserva como rebote ambiental en zonas sombreadas |
-| `VOXEL_SKIP_UNLIT` | No trazar en píxeles sin luz de bloque vanilla (gran ahorro, sin coste visual) |
-| `VOXEL_LIGHT_THINNING` | Muestreo reducido en campos densos de emisores (lagos de lava) |
-| `NETHER_LAVA_GLOW` | Atenúa el resplandor/bloom de la lava en el Nether |
-| `VOXEL_DEBUG` | Visualiza el factor trazado crudo (diagnóstico) |
+| `VOXEL_BLOCKLIGHT` | Master toggle for the voxel system |
+| `VOXELLIGHT_BRIGHTNESS` | How easily traced light reaches full brightness |
+| `VOXEL_DETAIL` | `1` = per-block occlusion (airtight, recommended). `2–4` = **experimental** sub-block detail (stairs/slabs), may leak light in some scenes |
+| `VOXEL_GLASS_TINT` | Tints light passing through stained glass / water / ice |
+| `VOXEL_SPECULAR` + `VOXEL_SPECULAR_STRENGTH` | Specular reflections of block lights |
+| `VOXEL_LIGHT_SIZE` | Source size (soft penumbra, accumulates with TAA) |
+| `VOXEL_MAX_TRACES` | Maximum rays per pixel (performance) |
+| `VOXEL_AMBIENT_MULT` | Vanilla light kept as ambient bounce in shadowed areas |
+| `VOXEL_SKIP_UNLIT` | Skip tracing on pixels with zero vanilla block light (big speedup, no visual cost) |
+| `VOXEL_LIGHT_THINNING` | Reduced sampling in dense emitter fields (lava lakes) |
+| `NETHER_LAVA_GLOW` | Tames the glow/bloom of lava in the Nether |
+| `VOXEL_DEBUG` | Visualizes the raw traced factor (diagnostics) |
 
-## ⚠️ Estado y limitaciones
+## ⚠️ Status and limitations
 
-- El **Nether** usa la iluminación original de IterationT (la voxelización requiere el shadow pass, que Iris no ejecuta allí de forma fiable). Incluye el control `NETHER_LAVA_GLOW`.
-- El **End** usa la iluminación original de IterationT.
-- `VOXEL_DETAIL` ≥ 2 (sombras sub-bloque) es experimental.
+- The **Nether** uses IterationT's original lighting (voxelization needs the shadow pass, which Iris doesn't run reliably there). Includes the `NETHER_LAVA_GLOW` control.
+- The **End** uses IterationT's original lighting.
+- `VOXEL_DETAIL` ≥ 2 (sub-block shadows) is experimental.
 
-### 🐞 Errores conocidos
+### 🐞 Known issues
 
-- Ninguno actualmente. 🎉
-- ~~**Slabs (losas) + lámparas**: la iluminación se generaba "por cubos" junto a bloques parciales~~ — **resuelto en v2.1** (oclusión analítica de medio bloque).
-- ~~**Muchas luces**: parches parpadeantes en escenas densas de lámparas~~ — **resuelto en v2.1** (listas de luces deterministas).
-- ~~**Sombras que cambiaban al moverse** en escenas densas~~ — **resuelto en v2.1** (retícula voxel anclada al mundo).
+- None at the moment. 🎉
+- ~~**Slabs + lamps**: lighting was generated "in cubes" next to partial blocks~~ — **fixed in v2.1** (analytic half-block occlusion).
+- ~~**Many lights**: flickering patches in dense lamp scenes~~ — **fixed in v2.1** (deterministic light lists).
+- ~~**Shadows shifting while moving** in dense scenes~~ — **fixed in v2.1** (world-anchored voxel grid).
 
-## 🗒️ Historial de versiones
+## 🗒️ Version history
 
-| Versión | Cambios |
+| Version | Changes |
 |---|---|
-| **v2.1** | Los bloques parciales (slabs, escaleras, alfombras, puertas…) solo bloquean la luz en la mitad que ocupan de verdad (oclusión analítica por octantes — adiós a la "iluminación por cubos"); escenas con muchas luces estables (listas de luces deterministas + cada píxel traza siempre su luz dominante); retícula voxel anclada al mundo (las sombras ya no cambian al caminar); menos lecturas de memoria por píxel |
-| **v2.0** | El shader se identifica como **IterationVX 2.0** en el juego (título animado de carga y menú de opciones); galería de capturas y compatibilidad con Distant Horizons documentadas |
-| v1.9 | Oclusión hermética por defecto (`VOXEL_DETAIL=1`); el detalle sub-bloque pasa a experimental |
-| v1.8 | DDA de un solo eje (anti túnel de esquinas), ruido amortiguado, lámparas de cubo completo ocluyen |
-| v1.7 | Revert de directivas Iris del Nether; `NETHER_LAVA_GLOW` |
-| v1.6 | Optimizaciones de FPS (agua, muchas luces, lava) + `VOXEL_DEBUG` |
-| v1.5 | Modelo de modulación normalizada — elimina el anillo de alcance |
-| v1.4 | Envolvente de lightmap vanilla |
-| v1.3 | Falloff suave estilo Frostbite |
-| v1.2 | Fix de fugas (bits de presencia) + reflejos especulares ray-traced |
-| v1.1 | Detalle sub-bloque, tinte de cristal/agua, soporte Nether |
-| **v1.0** | Base: IterationT 3.2.0 + sistema de luz voxel ray-traced completo |
+| **v2.1** | Partial blocks (slabs, stairs, carpets, doors…) only block light in the half they actually occupy (analytic octant occlusion — goodbye "cube lighting"); stable scenes with many lights (deterministic light lists + every pixel always traces its dominant light); world-anchored voxel grid (shadows no longer shift as you walk); fewer memory reads per pixel |
+| **v2.0** | The shader identifies itself as **IterationVX 2.0** in game (animated loading title and options menu); screenshot gallery and Distant Horizons compatibility documented |
+| v1.9 | Airtight occlusion by default (`VOXEL_DETAIL=1`); sub-block detail becomes experimental |
+| v1.8 | Single-axis DDA (anti corner-tunneling), damped noise, full-cube lamps occlude |
+| v1.7 | Revert of Nether Iris directives; `NETHER_LAVA_GLOW` |
+| v1.6 | FPS optimizations (water, many lights, lava) + `VOXEL_DEBUG` |
+| v1.5 | Normalized modulation model — removes the range ring |
+| v1.4 | Vanilla lightmap envelope |
+| v1.3 | Smooth Frostbite-style falloff |
+| v1.2 | Leak fix (presence bits) + ray-traced specular reflections |
+| v1.1 | Sub-block detail, glass/water tint, Nether support |
+| **v1.0** | Base: IterationT 3.2.0 + complete ray-traced voxel lighting system |
 
-## 💖 Donaciones
+## 💖 Donations
 
-Si te gusta IterationVX y quieres apoyar su desarrollo, puedes hacer una donación — cualquier aporte se agradece muchísimo y llega directamente por PayPal:
+If you like IterationVX and want to support its development, you can make a donation — every bit is hugely appreciated and goes straight to PayPal:
 
-[![Donar](docs/screenshots/donation.jpg)](https://botrix.live/k/lxrdbit/tip)
+[![Donate](docs/screenshots/donation.jpg)](https://botrix.live/k/lxrdbit/tip)
 
 **➡️ [botrix.live/k/lxrdbit/tip](https://botrix.live/k/lxrdbit/tip)**
 
-## 🙏 Créditos
+## 🙏 Credits
 
-- **[IterationT](https://www.curseforge.com/minecraft/shaders/iterationt)** por *Tahnass* — el shader pack base (edición de Chocapic13).
-- **[Rethinking Voxels](https://modrinth.com/shader/rethinking-voxels)** por *gri573* — la inspiración y referencia técnica del sistema de iluminación voxel.
-- Sistema voxel de IterationVX desarrollado con Claude (Anthropic).
+- **[IterationT](https://www.curseforge.com/minecraft/shaders/iterationt)** by *Tahnass* — the base shader pack (a Chocapic13 edit).
+- **[Rethinking Voxels](https://modrinth.com/shader/rethinking-voxels)** by *gri573* — the inspiration and technical reference for the voxel lighting system.
+- IterationVX's voxel system developed with Claude (Anthropic).
 
-Proyecto privado de uso personal. Los packs originales conservan sus respectivas licencias.
+Private project for personal use. The original packs keep their respective licenses.
