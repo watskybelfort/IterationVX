@@ -1,7 +1,7 @@
 #version 430
 
-//Builds per-cell light lists: every emitter voxel registers itself in all 8x8x8 cells
-//that its light range can reach, so the per-pixel pass only iterates nearby lights.
+//Light-list stage 1: every emitter voxel registers itself in its OWN 8x8x8 cell.
+//Stage 2 (shadowcomp_b) gathers these own-lists into each cell's final nearby-light list.
 
 #define DIMENSION_MAIN
 
@@ -27,10 +27,11 @@ void main(){
 	#ifdef VOXEL_LIGHT_THINNING
 		// dense max-level emitter fields (lava lakes, fire seas): register every other
 		// voxel in x/z; the normalized lighting model keeps brightness identical.
-		// Parity is computed in WORLD space so the pattern stays stable while moving.
+		// Parity is computed in WORLD space so the pattern stays stable while moving:
+		// the volume anchor is a multiple of 8 and the half-size offsets are even, so
+		// voxel-coord parity equals world-coord parity directly.
 		if (lightLevel >= 15){
-			ivec3 camFloor = ivec3(floor(cameraPosition));
-			ivec3 parity = (coords + camFloor) & ivec3(1);
+			ivec3 parity = coords & ivec3(1);
 			ivec3 evenCoords = coords - ivec3(parity.x, 0, parity.z);
 			if (evenCoords != coords){
 				int neighbor = imageLoad(occupancyVolume, evenCoords).r;

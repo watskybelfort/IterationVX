@@ -54,8 +54,15 @@ layout(std430, binding = 0) VOXEL_SSBO_QUALIFIER buffer voxelLightLists {
 };
 
 
+// Voxel-volume anchor, world-aligned to an 8-BLOCK grid (not to the camera block).
+// This pins voxel AND light-cell boundaries to fixed world positions while the
+// player moves — anchored per-block, every block crossed shifted the 8x8x8 cell
+// grid, and in dense scenes (>64 lights reaching a cell) the "keep the 64 nearest
+// to the cell center" cap kept a DIFFERENT subset each step: zones turned darker/
+// brighter as you walked. The camera sits up to 8 blocks off the volume center;
+// the half-size (64/48/64) leaves 56/40/56 usable blocks, far beyond light range.
 vec3 VoxelCameraFract(){
-	return fract(cameraPosition);
+	return cameraPosition - 8.0 * floor(cameraPosition * 0.125);
 }
 
 // scenePos: player/camera-relative world position. Returns continuous voxel-space position.
@@ -71,9 +78,14 @@ bool InsideVoxelVolume(ivec3 c){
 	return all(greaterThanEqual(c, ivec3(0))) && all(lessThan(c, voxelVolumeSize));
 }
 
-// 0 in the interior -> 1 at the border of the voxel volume; used to fade back to vanilla light.
+// 0 in the interior -> 1 at the border of the guaranteed-covered region; used to
+// fade back to vanilla light. Measured from the CAMERA, not the volume center: the
+// volume is world-anchored in 8-block steps, so its edges jump while walking — a
+// camera-centered fade stays put. The 8-block margin covers the worst-case offset
+// between the camera and the volume center.
 float VoxelEdgeFade(vec3 voxelPos){
-	vec3 rel = abs(voxelPos / vec3(voxelVolumeSize) * 2.0 - 1.0);
+	vec3 camVoxel = VoxelCameraFract() + vec3(voxelVolumeSize / 2);
+	vec3 rel = abs(voxelPos - camVoxel) / (vec3(voxelVolumeSize / 2) - 8.0);
 	float edge = max(max(rel.x, rel.y), rel.z);
 	return saturate(edge * 6.667 - 5.667); // fades over the outer 15%
 }
