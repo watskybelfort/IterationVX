@@ -125,6 +125,14 @@ Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 | v1.1 | Detalle sub-bloque, tinte de cristal/agua, soporte Nether |
 | **v1.0** | Base: IterationT 3.2.0 + sistema de luz voxel ray-traced completo |
 
+## 💖 Donaciones
+
+Si te gusta IterationVX y quieres apoyar su desarrollo, puedes hacer una donación — cualquier aporte se agradece muchísimo y llega directamente por PayPal:
+
+[![Donar](docs/screenshots/donation.jpg)](https://botrix.live/k/lxrdbit/tip)
+
+**➡️ [botrix.live/k/lxrdbit/tip](https://botrix.live/k/lxrdbit/tip)**
+
 ## 🙏 Créditos
 
 - **[IterationT](https://www.curseforge.com/minecraft/shaders/iterationt)** por *Tahnass* — el shader pack base (edición de Chocapic13).
