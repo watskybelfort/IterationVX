@@ -24,6 +24,10 @@ const int   VOXEL_MAX_LIGHTS_PER_CELL = 64;
 //   bit  9     : water (weaker tint than glass)
 //   bit  16    : light source present
 //   bits 17-21 : light level (0..31)
+//   bits 22-29 : octant occupancy mask (2x2x2 half-block corners actually covered
+//                by geometry; bit = x + y*2 + z*4, 0 = lower half per axis).
+//                Written by the shadow GS from vertex data (deterministic).
+//                0 = no mask data -> treat as fully solid. 255 = full cube.
 
 #ifndef WRITE_TO_VOXELS
 	layout(r32i) uniform readonly iimage3D occupancyVolume;

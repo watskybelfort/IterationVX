@@ -46,6 +46,42 @@ bool VoxelFineTrace(vec3 start, vec3 dir, float tIn, float tOut, ivec3 blockVoxe
 	return false;
 }
 
+// Analytic 2x2x2 sub-trace inside one solid voxel whose octant mask (bits 22-29,
+// written deterministically by the shadow GS from the block's real geometry) marks
+// which half-block corners are occupied. Lets rays pass through the empty half of
+// slabs, stairs, carpets, doors... instead of blocking the whole cube.
+// Returns true if the ray segment [tIn, tOut] hits an occupied octant.
+bool VoxelOctantTrace(vec3 start, vec3 dir, float tIn, float tOut, ivec3 blockVoxel, int mask){
+	// position in the doubled (half-block) grid, relative to the voxel's corner
+	vec3 p = (start + (tIn + 1e-4) * dir - vec3(blockVoxel)) * 2.0;
+
+	ivec3 cell = clamp(ivec3(floor(p)), ivec3(0), ivec3(1));
+	ivec3 stepDir = ivec3(sign(dir));
+	vec3 absInv = 1.0 / max(abs(dir), vec3(1e-6));
+	vec3 tNext = (sign(dir) * (0.5 - fract(p)) + 0.5) * absInv;
+
+	float tSpan = (tOut - tIn) * 2.0; // remaining distance in half-block units
+	float t = 0.0;
+	for (int i = 0; i < 5; i++){
+		if ((mask & (1 << (cell.x + cell.y * 2 + cell.z * 4))) != 0) return true;
+
+		// single-axis stepping, ties broken by priority (no diagonal corner tunneling)
+		float tHit;
+		if (tNext.x <= tNext.y && tNext.x <= tNext.z){
+			tHit = tNext.x; cell.x += stepDir.x; tNext.x += absInv.x;
+		}else if (tNext.y <= tNext.z){
+			tHit = tNext.y; cell.y += stepDir.y; tNext.y += absInv.y;
+		}else{
+			tHit = tNext.z; cell.z += stepDir.z; tNext.z += absInv.z;
+		}
+		t = tHit;
+
+		if (t >= tSpan) break;
+		if (any(lessThan(cell, ivec3(0))) || any(greaterThan(cell, ivec3(1)))) break;
+	}
+	return false;
+}
+
 // DDA through the occupancy volume. start/end in continuous voxel space.
 // targetVoxel: the light's own voxel — reaching it counts as arrival (solid
 // full-cube emitters must never shadow themselves).
@@ -100,7 +136,13 @@ vec3 VoxelShadowTrace(vec3 start, vec3 end, ivec3 targetVoxel){
 				if (VoxelFineTrace(start, dir, t, tExit, voxel, k)) return vec3(0.0);
 				// ray slips through the gaps of a partial block: keep going
 			#else
-				return vec3(0.0);
+				int octMask = (occupancy >> 22) & 255;
+				// full cube (all octants or no mask data, e.g. solid lamps): hard block
+				if (octMask == 0 || octMask == 255) return vec3(0.0);
+
+				float tExit = min(min(min(tNext.x, tNext.y), tNext.z), tMax);
+				if (VoxelOctantTrace(start, dir, t, tExit, voxel, octMask)) return vec3(0.0);
+				// ray passes through the empty half of a partial block: keep going
 			#endif
 		}
 		#ifdef VOXEL_GLASS_TINT

@@ -164,8 +164,29 @@ int DoVoxelization(){
 	vec3 cnormal = normalize(cross(e0, -e2) + vec3(1e-6, 2e-6, 3e-6));
 	if (length(abs(cnormal.xz) - vec2(sqrt(0.5))) < 0.01) return 0; // X-shaped quads
 
-	// conservative block-level occupancy (bit 0); fine levels come from the raster pass
-	imageAtomicOr(occupancyVolume, coords, 1);
+	// Octant mask (bits 22-29): which 2x2x2 half-block corners of the block this
+	// triangle touches, biased to the face's interior side. Full cubes mark all 8;
+	// slabs/stairs/carpets/doors only their occupied part, so the tracer can let
+	// light through the empty half (fixes cube-shaped shadows around partial blocks).
+	// Derived from vertex data, not rasterization -> deterministic, no coverage gaps.
+	vec3 bias = cnormal * 0.05;
+	vec3 rel0 = -midBlockV[0] - bias;
+	vec3 rel1 = -midBlockV[1] - bias;
+	vec3 rel2 = -midBlockV[2] - bias;
+	vec3 relMin = min(min(rel0, rel1), rel2);
+	vec3 relMax = max(max(rel0, rel1), rel2);
+
+	int octMask = 0;
+	for (int oct = 0; oct < 8; oct++){
+		vec3 lo = vec3(ivec3(oct, oct >> 1, oct >> 2) & 1) * 0.5 - 0.5;
+		if (all(greaterThan(relMax, lo + 0.01)) && all(lessThan(relMin, lo + 0.49)))
+			octMask |= 1 << oct;
+	}
+	// geometry thinner than an octant boundary (panes, bars): keep the block fully
+	// solid rather than risk marking nothing — occlusion may only ever be added
+	if (octMask == 0) octMask = 255;
+
+	imageAtomicOr(occupancyVolume, coords, 1 | (octMask << 22));
 	voxelFaceNormal = cnormal;
 
 	#if VOXEL_DETAIL > 1
