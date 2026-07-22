@@ -1,8 +1,8 @@
 
 
-option.iterationT_VERSION=iterationT by Tahnass
-value.iterationT_VERSION.AT=3.2.0
-value.iterationT_VERSION.BT=r3.2.0
+option.iterationT_VERSION=IterationVX
+value.iterationT_VERSION.AT=1.9
+value.iterationT_VERSION.BT=1.9 (iterationT 3.2.0)
 option.iterationT_VERSION_TYPE=Developing Stage
 value.iterationT_VERSION_TYPE.AT=Release
 value.iterationT_VERSION_TYPE.BT=241004
