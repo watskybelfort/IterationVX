@@ -107,12 +107,16 @@ Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 
 ### 🐞 Errores conocidos
 
-- **Slabs (losas) + lámparas**: cuando hay lámparas junto a slabs u otros bloques parciales, la iluminación puede generarse "por cubos" — se ven los bloques de la cuadrícula voxel marcados en la luz, con un efecto muy extraño. Es un error conocido y se está trabajando en resolverlo para una próxima versión. (Causa probable: la oclusión se evalúa a resolución de bloque completo, y una slab ocupa el voxel entero.)
+- Ninguno actualmente. 🎉
+- ~~**Slabs (losas) + lámparas**: la iluminación se generaba "por cubos" junto a bloques parciales~~ — **resuelto en v2.1** (oclusión analítica de medio bloque).
+- ~~**Muchas luces**: parches parpadeantes en escenas densas de lámparas~~ — **resuelto en v2.1** (listas de luces deterministas).
+- ~~**Sombras que cambiaban al moverse** en escenas densas~~ — **resuelto en v2.1** (retícula voxel anclada al mundo).
 
 ## 🗒️ Historial de versiones
 
 | Versión | Cambios |
 |---|---|
+| **v2.1** | Los bloques parciales (slabs, escaleras, alfombras, puertas…) solo bloquean la luz en la mitad que ocupan de verdad (oclusión analítica por octantes — adiós a la "iluminación por cubos"); escenas con muchas luces estables (listas de luces deterministas + cada píxel traza siempre su luz dominante); retícula voxel anclada al mundo (las sombras ya no cambian al caminar); menos lecturas de memoria por píxel |
 | **v2.0** | El shader se identifica como **IterationVX 2.0** en el juego (título animado de carga y menú de opciones); galería de capturas y compatibilidad con Distant Horizons documentadas |
 | v1.9 | Oclusión hermética por defecto (`VOXEL_DETAIL=1`); el detalle sub-bloque pasa a experimental |
 | v1.8 | DDA de un solo eje (anti túnel de esquinas), ruido amortiguado, lámparas de cubo completo ocluyen |
