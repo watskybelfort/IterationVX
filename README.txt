@@ -1,4 +1,4 @@
-IterationVX 2.0 — IterationT 3.2.0 + luz de bloques voxel ray-traced
+IterationVX 2.1 — IterationT 3.2.0 + luz de bloques voxel ray-traced
 ====================================================================
 
 Base: IterationT 3.2.0 (edicion de Chocapic13, por Tahnass)
@@ -40,10 +40,12 @@ OPCIONES (Shader Pack Settings > LIGHTING > VOXEL_LIGHT)
 - NETHER_LAVA_GLOW: atenua el bloom de la lava del Nether.
 - VOXEL_DEBUG: pinta el factor trazado crudo (diagnostico).
 
-ERRORES CONOCIDOS
-- Slabs (losas) + lamparas: la iluminacion puede generarse "por cubos"
-  (se marca la cuadricula voxel en la luz). Error conocido, en proceso
-  de resolverse en una proxima version.
+NOVEDADES 2.1
+- ARREGLADO el error de "iluminacion por cubos" con slabs y lamparas:
+  los bloques parciales (slabs, escaleras, alfombras, puertas, nieve)
+  ya solo bloquean la luz en la mitad que ocupan de verdad (oclusion
+  analitica de medio bloque, derivada de la geometria real del bloque).
+  Los cubos completos se comportan exactamente igual que antes.
 
 Si el shader no compila, en Iris pulsa la tecla de log o revisa
 logs/latest.log y comparte los errores para poder corregirlos.
