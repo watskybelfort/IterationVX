@@ -14,11 +14,56 @@ IterationVX toma el shader pack IterationT (edición de Chocapic13 por Tahnass) 
 - **Tinte a través de translúcidos** — la luz que atraviesa cristales tintados se tiñe de su color; bajo el agua la luz se vuelve azulada.
 - **Sin artefactos de alcance** — el apagado de cada luz sigue exactamente el perfil de la iluminación vanilla de IterationT (modelo de modulación normalizada), así que no hay anillos ni cortes visibles.
 - **Optimizado** — los píxeles sin luz de bloque no trazan nada (coste ~cero en exteriores), listas de luces por celdas con ordenación determinista, y atajos matemáticamente invisibles en escenas con muchas luces.
+- **Compatible con Distant Horizons** — el terreno LOD lejano se renderiza perfectamente con el sistema voxel activo (soporte DH de IterationT intacto, incluidas las sombras DH opcionales).
 - Todo lo demás de IterationT intacto: cielo, nubes volumétricas, agua, TAA, bloom, GI…
 
 ## 📸 Capturas
 
-*(próximamente)*
+Comparativas en las mismas escenas: **IterationT 3.2.0 (antes)** frente a **IterationVX (después)**.
+
+**1 — Antorcha en una cueva: sombras nítidas trazadas por rayos y luz cálida rebotando en la piedra**
+
+| Antes | Después |
+|---|---|
+| ![Cueva antes](docs/screenshots/01-before.jpg) | ![Cueva después](docs/screenshots/01-after.jpg) |
+
+**2 — Luz roja: el color del emisor baña el pasillo y la pared bloquea la luz de verdad**
+
+| Antes | Después |
+|---|---|
+| ![Luz roja antes](docs/screenshots/02-before.jpg) | ![Luz roja después](docs/screenshots/02-after.jpg) |
+
+**3 — Fuentes de colores alternos: cada luz proyecta su propio color y sus propias sombras**
+
+| Antes | Después |
+|---|---|
+| ![Colores antes](docs/screenshots/03-before.jpg) | ![Colores después](docs/screenshots/03-after.jpg) |
+
+**4 — Luz fría entrando por una abertura: sombras largas y definidas sobre el suelo**
+
+| Antes | Después |
+|---|---|
+| ![Luz fría antes](docs/screenshots/04-before.jpg) | ![Luz fría después](docs/screenshots/04-after.jpg) |
+
+**5 — Luz azul: el color se detecta automáticamente y tiñe toda la sala**
+
+| Antes | Después |
+|---|---|
+| ![Luz azul antes](docs/screenshots/05-before.jpg) | ![Luz azul después](docs/screenshots/05-after.jpg) |
+
+### 🌌 El End
+
+El cielo del End de IterationT, intacto en IterationVX:
+
+| | |
+|---|---|
+| ![End 1](docs/screenshots/end-1.jpg) | ![End 2](docs/screenshots/end-2.jpg) |
+
+### 🗺️ Distant Horizons
+
+Totalmente compatible: el terreno LOD de Distant Horizons se funde con el terreno real sin costuras, con el sistema de luz voxel funcionando a la vez.
+
+![Vista con Distant Horizons](docs/screenshots/distant-horizons.jpg)
 
 ## 📋 Requisitos
 
@@ -27,6 +72,7 @@ IterationVX toma el shader pack IterationT (edición de Chocapic13 por Tahnass) 
 | **Loader de shaders** | [Iris](https://irisshaders.dev/) 1.6.1 o superior — **OptiFine NO es compatible** (el sistema usa compute shaders, imágenes 3D y SSBOs) |
 | **Minecraft** | Las mismas versiones que soporta IterationT 3.2.0 (1.13+, recomendado 1.18+) |
 | **GPU** | Cualquiera con OpenGL 4.3 (NVIDIA / AMD / Intel modernas) |
+| **Distant Horizons** | ✅ Compatible (probado con el sistema voxel activo) |
 
 ## 📥 Instalación
 
@@ -63,6 +109,7 @@ Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 
 | Versión | Cambios |
 |---|---|
+| main (próxima release) | El shader se identifica como **IterationVX 1.9** en el juego: título animado de carga y menú de opciones |
 | **v1.9** | Oclusión hermética por defecto (`VOXEL_DETAIL=1`); el detalle sub-bloque pasa a experimental |
 | v1.8 | DDA de un solo eje (anti túnel de esquinas), ruido amortiguado, lámparas de cubo completo ocluyen |
 | v1.7 | Revert de directivas Iris del Nether; `NETHER_LAVA_GLOW` |
