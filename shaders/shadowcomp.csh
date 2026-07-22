@@ -19,5 +19,6 @@ void main(){
 	int idx = int(gl_GlobalInvocationID.x);
 	if (idx < voxelCellTotal){
 		voxelCellLightCount[idx] = 0;
+		voxelCellOwnCount[idx] = 0;
 	}
 }

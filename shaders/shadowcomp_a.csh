@@ -42,20 +42,15 @@ void main(){
 	float range = float(lightLevel) * VOXEL_RANGE_MULT;
 	if (range < 0.5) return;
 
-	ivec3 cellMin = clamp(ivec3(floor(vec3(coords) + 0.5 - range)) >> 3, ivec3(0), voxelCellCount - 1);
-	ivec3 cellMax = clamp(ivec3(floor(vec3(coords) + 0.5 + range)) >> 3, ivec3(0), voxelCellCount - 1);
-
-	int packedCoord = PackVoxelCoord(coords);
-
-	for (int z = cellMin.z; z <= cellMax.z; z++){
-		for (int y = cellMin.y; y <= cellMax.y; y++){
-			for (int x = cellMin.x; x <= cellMax.x; x++){
-				int cellIndex = VoxelCellIndex(ivec3(x, y, z));
-				int slot = atomicAdd(voxelCellLightCount[cellIndex], 1);
-				if (slot < VOXEL_MAX_LIGHTS_PER_CELL){
-					voxelCellLightData[cellIndex * VOXEL_MAX_LIGHTS_PER_CELL + slot] = packedCoord;
-				}
-			}
-		}
+	// register in the light's OWN cell only; the gather pass (shadowcomp_b)
+	// redistributes to every cell in range. A cell physically holds at most 64
+	// surface emitters (8x8 top layer; lava is thinned to 32), so the own-list
+	// CONTENT is complete and stable — unlike the old direct dilation, where >64
+	// candidates raced for slots and the surviving set changed every frame
+	// (flickering patches in scenes with many lights).
+	int cellIndex = VoxelCellIndex(coords >> 3);
+	int slot = atomicAdd(voxelCellOwnCount[cellIndex], 1);
+	if (slot < VOXEL_MAX_LIGHTS_PER_CELL){
+		voxelCellOwnData[cellIndex * VOXEL_MAX_LIGHTS_PER_CELL + slot] = PackLightEntry(coords, lightLevel);
 	}
 }

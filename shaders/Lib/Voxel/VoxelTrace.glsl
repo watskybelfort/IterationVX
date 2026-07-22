@@ -164,6 +164,33 @@ vec3 VoxelShadowTrace(vec3 start, vec3 end, ivec3 targetVoxel){
 }
 
 
+// Distance/orientation weight of one light-list entry for this pixel. Pure math,
+// no memory reads (the entry carries coord + light level).
+float VoxelLightWeight(int entry, vec3 voxelPos, vec3 worldNormal, out vec3 lightPos, out float dist, out float atten){
+	lightPos = vec3(UnpackVoxelCoord(entry)) + 0.5;
+	vec3 toLight = lightPos - voxelPos;
+	dist = length(toLight);
+	atten = 0.0;
+
+	float range = float(LightEntryLevel(entry)) * VOXEL_RANGE_MULT;
+	if (dist > range || range < 0.5) return 0.0;
+
+	float ndotl = dot(worldNormal, toLight / max(dist, 1e-4));
+	// light inside/level with the surface voxel: avoid black caps on the emitting face
+	ndotl = dist < 0.87 ? 1.0 : saturate(ndotl * 0.9 + 0.1);
+	if (ndotl <= 0.0) return 0.0;
+
+	// inverse-square falloff with a smooth Frostbite-style range window:
+	// nearly pure 1/d^2 through most of the range, bending gently to zero at
+	// the very end (no visible circle where the light cuts off)
+	float dr = dist / range;
+	float window = saturate(1.0 - dr * dr * dr * dr);
+	window *= window;
+	atten = window * 3.0 / (dist * dist + 0.5);
+
+	return atten * ndotl;
+}
+
 // scenePos: camera-relative world pos of the shaded point. worldNormal: world-space normal.
 // noise: per-frame jitter in [0,1)^3 for penumbra (smoothed by TAA).
 // worldViewDir: normalized direction camera->surface (world space), for specular.
@@ -189,47 +216,42 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 	// sphere jitter for soft penumbra
 	vec3 jitter = (noise * 2.0 - 1.0) * VOXEL_LIGHT_SIZE * 0.5;
 
+	int cellBase = cellIndex * VOXEL_MAX_LIGHTS_PER_CELL;
+
+	// pass 1: find this pixel's strongest light — it gets traced no matter where it
+	// sits in the cell list — and the significance threshold that spends the trace
+	// budget only on lights that matter for THIS pixel. Pure math, no memory reads.
+	float maxWeight = 0.0;
+	int maxIdx = -1;
+	for (int i = 0; i < count; i++){
+		vec3 lp; float d; float at;
+		float w = VoxelLightWeight(voxelCellLightData[cellBase + i], voxelPos, worldNormal, lp, d, at);
+		if (w > maxWeight){ maxWeight = w; maxIdx = i; }
+	}
+	if (maxIdx < 0) return vec3(0.0);
+	float sigThreshold = maxWeight * 0.02;
+
 	vec3 lighting = vec3(0.0);
 	float weightSum = 0.0;
 	int traces = 0;
 
-	for (int i = 0; i < count && traces < VOXEL_MAX_TRACES; i++){
-		ivec3 lightCoord = UnpackVoxelCoord(voxelCellLightData[cellIndex * VOXEL_MAX_LIGHTS_PER_CELL + i]);
+	// pass 2: strongest light first, then nearest-first; insignificant lights are
+	// SKIPPED, never break out of the list — it is ordered around the CELL center,
+	// not around this pixel, so a pixel near a cell corner can have its dominant
+	// lights late in the list (breaking early caused 8x8-block artifacts and lost
+	// lights in scenes with many emitters)
+	for (int s = 0; s < count; s++){
+		if (traces >= VOXEL_MAX_TRACES) break;
+		int i = s == 0 ? maxIdx : (s - 1 < maxIdx ? s - 1 : s);
 
-		int occupancy = imageLoad(occupancyVolume, lightCoord).r;
-		if (!VoxelIsLight(occupancy)) continue;
-		float level = float(VoxelLightLevel(occupancy));
-		if (level < 0.5) continue;
-
-		vec3 lightPos = vec3(lightCoord) + 0.5;
-		vec3 toLight = lightPos - voxelPos;
-		float dist = length(toLight);
-
-		float range = level * VOXEL_RANGE_MULT;
-		if (dist > range) continue;
-
-		float ndotl = dot(worldNormal, toLight / max(dist, 1e-4));
-		// light inside/level with the surface voxel: avoid black caps on the emitting face
-		ndotl = dist < 0.87 ? 1.0 : saturate(ndotl * 0.9 + 0.1);
-		if (ndotl <= 0.0) continue;
-
-		// inverse-square falloff with a smooth Frostbite-style range window:
-		// nearly pure 1/d^2 through most of the range, bending gently to zero at
-		// the very end (no visible circle where the light cuts off)
-		float dr = dist / range;
-		float window = saturate(1.0 - dr * dr * dr * dr);
-		window *= window;
-		float atten = window * 3.0 / (dist * dist + 0.5);
-
-		float weight = atten * ndotl;
-		if (weight < 1e-5) continue;
-
-		// lights are sorted nearest-first per cell: once the remaining lights can
-		// only shift the normalized average by <1%, stop tracing (invisible change)
-		if (traces >= 4 && weight < 0.01 * weightSum) break;
+		int entry = voxelCellLightData[cellBase + i];
+		vec3 lightPos; float dist; float atten;
+		float weight = VoxelLightWeight(entry, voxelPos, worldNormal, lightPos, dist, atten);
+		if (weight < sigThreshold) continue;
 
 		weightSum += weight;
 		traces++;
+		ivec3 lightCoord = UnpackVoxelCoord(entry);
 		vec3 visibility = VoxelShadowTrace(surfacePos, lightPos + jitter, lightCoord);
 		if (max(max(visibility.r, visibility.g), visibility.b) <= 0.0) continue;
 
@@ -238,7 +260,7 @@ vec3 VoxelBlockLighting(vec3 scenePos, vec3 worldNormal, vec3 noise, vec3 worldV
 		lighting += lightCol * visibility * weight;
 
 		#ifdef VOXEL_SPECULAR
-			float ggx = SpecularGGX(worldNormal, -worldViewDir, toLight / max(dist, 1e-4),
+			float ggx = SpecularGGX(worldNormal, -worldViewDir, (lightPos - voxelPos) / max(dist, 1e-4),
 			                        clamp(roughness, 0.0015, 0.9), f0);
 			ggx *= saturate(4.0 - roughness * 3.5);
 			voxelSpecular += lightCol * visibility * (ggx * atten);

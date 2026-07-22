@@ -43,9 +43,14 @@ const int   VOXEL_MAX_LIGHTS_PER_CELL = 64;
 	#define VOXEL_SSBO_QUALIFIER
 #endif
 
+// Final per-cell lists (read by the trace) + per-cell OWN lists (stage 1: each
+// light registers only in its own cell; stage 2 gathers from neighbor cells and
+// keeps the 64 nearest — deterministic, unlike slot races on overflow).
 layout(std430, binding = 0) VOXEL_SSBO_QUALIFIER buffer voxelLightLists {
 	int voxelCellLightCount[3072];
 	int voxelCellLightData[3072 * 64];
+	int voxelCellOwnCount[3072];
+	int voxelCellOwnData[3072 * 64];
 };
 
 
@@ -83,6 +88,16 @@ int PackVoxelCoord(ivec3 c){
 
 ivec3 UnpackVoxelCoord(int p){
 	return ivec3(p & 255, (p >> 8) & 255, (p >> 16) & 255);
+}
+
+// Light-list entries carry the voxel coord (bits 0-23) and the light level
+// (bits 24-28), so the per-pixel pass needs no occupancy reads per light.
+int PackLightEntry(ivec3 c, int level){
+	return PackVoxelCoord(c) | (level << 24);
+}
+
+int LightEntryLevel(int e){
+	return (e >> 24) & 31;
 }
 
 int VoxelLightLevel(int occupancyData){
