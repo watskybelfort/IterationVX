@@ -105,12 +105,16 @@ Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 - El **End** usa la iluminación original de IterationT.
 - `VOXEL_DETAIL` ≥ 2 (sombras sub-bloque) es experimental.
 
+### 🐞 Errores conocidos
+
+- **Slabs (losas) + lámparas**: cuando hay lámparas junto a slabs u otros bloques parciales, la iluminación puede generarse "por cubos" — se ven los bloques de la cuadrícula voxel marcados en la luz, con un efecto muy extraño. Es un error conocido y se está trabajando en resolverlo para una próxima versión. (Causa probable: la oclusión se evalúa a resolución de bloque completo, y una slab ocupa el voxel entero.)
+
 ## 🗒️ Historial de versiones
 
 | Versión | Cambios |
 |---|---|
-| main (próxima release) | El shader se identifica como **IterationVX 1.9** en el juego: título animado de carga y menú de opciones |
-| **v1.9** | Oclusión hermética por defecto (`VOXEL_DETAIL=1`); el detalle sub-bloque pasa a experimental |
+| **v2.0** | El shader se identifica como **IterationVX 2.0** en el juego (título animado de carga y menú de opciones); galería de capturas y compatibilidad con Distant Horizons documentadas |
+| v1.9 | Oclusión hermética por defecto (`VOXEL_DETAIL=1`); el detalle sub-bloque pasa a experimental |
 | v1.8 | DDA de un solo eje (anti túnel de esquinas), ruido amortiguado, lámparas de cubo completo ocluyen |
 | v1.7 | Revert de directivas Iris del Nether; `NETHER_LAVA_GLOW` |
 | v1.6 | Optimizaciones de FPS (agua, muchas luces, lava) + `VOXEL_DEBUG` |
