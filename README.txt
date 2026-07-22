@@ -46,6 +46,13 @@ NOVEDADES 2.1
   ya solo bloquean la luz en la mitad que ocupan de verdad (oclusion
   analitica de medio bloque, derivada de la geometria real del bloque).
   Los cubos completos se comportan exactamente igual que antes.
+- ARREGLADO el parpadeo/inestabilidad en escenas con muchas luces:
+  las listas de luces ahora son deterministas (se conservan siempre
+  las 64 mas cercanas) y cada pixel traza siempre su luz dominante.
+- ARREGLADAS las sombras que cambiaban al moverse: la reticula voxel
+  ahora esta anclada al mundo (no al jugador), asi que la iluminacion
+  se queda perfectamente quieta mientras caminas.
+- Bonus de rendimiento: menos lecturas de memoria por pixel.
 
 Si el shader no compila, en Iris pulsa la tecla de log o revisa
 logs/latest.log y comparte los errores para poder corregirlos.
