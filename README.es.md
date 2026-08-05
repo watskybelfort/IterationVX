@@ -114,6 +114,16 @@ Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 - ~~**Muchas luces**: parches parpadeantes en escenas densas de lámparas~~ — **resuelto en v2.1** (listas de luces deterministas).
 - ~~**Sombras que cambiaban al moverse** en escenas densas~~ — **resuelto en v2.1** (retícula voxel anclada al mundo).
 
+## 💬 Soporte y contacto
+
+| | |
+|---|---|
+| 🐞 **Reportar bugs** | [GitHub Issues](https://github.com/watskybelfort/IterationVX/issues) |
+| 💡 **Ideas y peticiones** | El mismo tracker — abre un issue y márcalo como sugerencia |
+| 🐦 **Novedades, capturas y MD** | [@x_Imlegit en X](https://x.com/x_Imlegit) — las versiones nuevas se anuncian aquí primero |
+
+Al reportar, incluye: versión de Minecraft e Iris, tu GPU, qué ajustes de `VOXEL_LIGHT` has tocado, `logs/latest.log` si el pack no compila, y una captura para cualquier cosa visual.
+
 ## 🗒️ Historial de versiones
 
 | Versión | Cambios |
