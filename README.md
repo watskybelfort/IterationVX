@@ -114,6 +114,16 @@ Menu: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
 - ~~**Many lights**: flickering patches in dense lamp scenes~~ — **fixed in v2.1** (deterministic light lists).
 - ~~**Shadows shifting while moving** in dense scenes~~ — **fixed in v2.1** (world-anchored voxel grid).
 
+## 💬 Support & contact
+
+| | |
+|---|---|
+| 🐞 **Bug reports** | [GitHub Issues](https://github.com/watskybelfort/IterationVX/issues) |
+| 💡 **Ideas & requests** | Same tracker — open an issue and tag it as a suggestion |
+| 🐦 **News, screenshots & DMs** | [@x_Imlegit on X](https://x.com/x_Imlegit) — new versions get posted here first |
+
+When reporting, include: Minecraft + Iris version, your GPU, which `VOXEL_LIGHT` settings you changed, `logs/latest.log` if the pack fails to compile, and a screenshot for anything visual.
+
 ## 🗒️ Version history
 
 | Version | Changes |
