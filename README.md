@@ -145,6 +145,10 @@ When reporting, include: Minecraft + Iris version, your GPU, which `VOXEL_LIGHT`
 
 - **[IterationT](https://www.curseforge.com/minecraft/shaders/iterationt)** by *Tahnass* — the base shader pack (a Chocapic13 edit).
 - **[Rethinking Voxels](https://modrinth.com/shader/rethinking-voxels)** by *gri573* — the inspiration and technical reference for the voxel lighting system.
+- **Physics Ocean** wave functions by *afl_ext* — as credited inside the file itself.
 - IterationVX's voxel system developed with Claude (Anthropic).
 
-Private project for personal use. The original packs keep their respective licenses.
+IterationVX is an **edit**: most of the code here belongs to the authors above and keeps
+their original terms — only the voxel additions are mine, and nothing is monetized.
+Full breakdown in **[NOTICE.md](NOTICE.md)**. If you're one of those authors and want this
+taken down or changed, open an issue and I'll comply.

@@ -145,6 +145,10 @@ Al reportar, incluye: versión de Minecraft e Iris, tu GPU, qué ajustes de `VOX
 
 - **[IterationT](https://www.curseforge.com/minecraft/shaders/iterationt)** por *Tahnass* — el shader pack base (edición de Chocapic13).
 - **[Rethinking Voxels](https://modrinth.com/shader/rethinking-voxels)** por *gri573* — la inspiración y referencia técnica del sistema de iluminación voxel.
+- Funciones de olas de **Physics Ocean** por *afl_ext* — acreditadas en el propio archivo.
 - Sistema voxel de IterationVX desarrollado con Claude (Anthropic).
 
-Proyecto privado de uso personal. Los packs originales conservan sus respectivas licencias.
+IterationVX es una **edición**: la mayor parte del código de aquí es de los autores de
+arriba y conserva sus términos originales — solo lo añadido del sistema voxel es mío, y no
+se monetiza nada. El desglose completo está en **[NOTICE.md](NOTICE.md)**. Si eres uno de
+esos autores y quieres que lo quite o lo cambie, abre un issue y lo hago.
