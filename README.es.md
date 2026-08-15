@@ -82,6 +82,12 @@ Totalmente compatible: el terreno LOD de Distant Horizons se funde con el terren
 2. Cópialo a la carpeta `shaderpacks` de tu instancia de Minecraft (no lo descomprimas).
 3. En el juego: **Opciones de vídeo → Shader Packs → IterationVX** y aplica.
 
+> **IterationVX no está en Modrinth.** Estuvo publicado allí y la moderación lo retiró por
+> la sección 4 de las Content Rules (las resubidas están prohibidas) — el pack es una
+> edición de un proyecto ajeno. Los detalles, en [NOTICE.md](NOTICE.md). **Las releases de
+> este GitHub son la única fuente oficial**; si lo ves alojado en otro sitio, no lo he
+> subido yo.
+
 ## ⚙️ Configuración
 
 Menú: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**

@@ -82,6 +82,11 @@ Fully compatible: Distant Horizons LOD terrain blends seamlessly with real terra
 2. Copy it into your Minecraft instance's `shaderpacks` folder (don't unzip it).
 3. In game: **Video Settings → Shader Packs → IterationVX** and apply.
 
+> **IterationVX is not on Modrinth.** It was published there and removed by moderation
+> under section 4 of the Content Rules (re-uploads are forbidden) — the pack is an edit of
+> someone else's project. Details in [NOTICE.md](NOTICE.md). **GitHub Releases here is the
+> only official source**; if you find it hosted anywhere else, it wasn't uploaded by me.
+
 ## ⚙️ Settings
 
 Menu: **Shader Pack Settings → LIGHTING → VOXEL_LIGHT**
