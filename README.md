@@ -141,14 +141,6 @@ When reporting, include: Minecraft + Iris version, your GPU, which `VOXEL_LIGHT`
 | v1.1 | Sub-block detail, glass/water tint, Nether support |
 | **v1.0** | Base: IterationT 3.2.0 + complete ray-traced voxel lighting system |
 
-## 💖 Donations
-
-If you like IterationVX and want to support its development, you can make a donation — every bit is hugely appreciated and goes straight to PayPal:
-
-[![Donate](docs/screenshots/donation.jpg)](https://botrix.live/k/lxrdbit/tip)
-
-**➡️ [botrix.live/k/lxrdbit/tip](https://botrix.live/k/lxrdbit/tip)**
-
 ## 🙏 Credits
 
 - **[IterationT](https://www.curseforge.com/minecraft/shaders/iterationt)** by *Tahnass* — the base shader pack (a Chocapic13 edit).
